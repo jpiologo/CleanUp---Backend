@@ -6,3 +6,167 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum UserRole {
+  CLIENT
+  CLEANER
+  ADMIN
+}
+
+model User {
+  id                  String        @id @default(uuid())
+  firstName           String
+  lastName            String
+  email               String        @unique // O @unique já cria um índice automaticamente
+  password            String // Assumindo que será criptografado na aplicação
+  identityDocument    String
+  phone               String
+  role                UserRole      @default(CLIENT)
+  addresses           Address[]
+  appointmentsClient  Appointment[] @relation("ClientAppointments")
+  appointmentsCleaner Appointment[] @relation("CleanerAppointments")
+  userPlans           UserPlan[]
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  Notification        Notification[]
+  CleanerAvailability CleanerAvailability[]
+
+  @@index([email]) // Índice explícito em email (opcional, já que @unique já o faz)
+}
+
+model Address {
+  id           String  @id @default(uuid())
+  street       String
+  number       String
+  neighborhood String
+  city         String
+  state        String
+  country      String
+  zipCode      String
+  complement   String?
+  reference    String?
+  userId       String
+  user         User    @relation(fields: [userId], references: [id])
+
+  @@index([userId]) // Índice para consultas por usuário
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELED
+}
+
+model Appointment {
+  id             String            @id @default(uuid())
+  dateTime       DateTime
+  duration       Int? // Duração estimada em minutos (opcional)
+  status         AppointmentStatus
+  notes          String?
+  cleaningTypeId String
+  planId         String?
+  clientId       String
+  cleanerId      String?
+
+  cleaningType CleaningType @relation(fields: [cleaningTypeId], references: [id])
+  plan         Plan?        @relation(fields: [planId], references: [id])
+  client       User         @relation("ClientAppointments", fields: [clientId], references: [id])
+  cleaner      User?        @relation("CleanerAppointments", fields: [cleanerId], references: [id])
+
+  Payment Payment[]
+
+  @@index([dateTime]) // Índice para consultas por data
+  @@index([status]) // Índice para filtragem por status
+}
+
+model CleaningType {
+  id           String        @id @default(uuid())
+  name         String
+  price        Decimal
+  appointments Appointment[]
+}
+
+enum PlanRecurrence {
+  WEEKLY
+  MONTHLY
+  ANNUAL
+}
+
+model Plan {
+  id               String         @id @default(uuid())
+  name             String
+  price            Decimal
+  recurrence       PlanRecurrence
+  daysToExpire     Int
+  cleaningsPerWeek Int
+  userPlans        UserPlan[]
+  appointments     Appointment[]
+}
+
+model UserPlan {
+  id            String   @id @default(uuid())
+  userId        String
+  planId        String
+  startDate     DateTime
+  endDate       DateTime
+  active        Boolean  @default(true)
+  usedCleanings Int      @default(0)
+  paymentId     String? // Referência externa de pagamento (ex: Stripe)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  plan Plan @relation(fields: [planId], references: [id])
+
+  @@index([userId]) // Índice para consultas por usuário
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  appointmentId String
+  amount        Decimal
+  method        String // Ex: "CreditCard", "PIX", etc.
+  transactionId String? // Referência externa (ex: ID do Stripe)
+  status        PaymentStatus
+  createdAt     DateTime      @default(now())
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+}
+
+enum NotificationType {
+  REMINDER
+  CONFIRMATION
+  CANCELLATION
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  message   String
+  type      NotificationType
+  read      Boolean          @default(false)
+  userId    String
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId]) // Índice para consultas por usuário
+}
+
+model CleanerAvailability {
+  id        String   @id @default(uuid())
+  cleanerId String
+  weekDay   Int // 0 = Sunday, 1 = Monday, etc.
+  startTime DateTime // Pode ser ajustado para String se preferir "HH:MM"
+  endTime   DateTime // Pode ser ajustado para String se preferir "HH:MM"
+
+  cleaner User @relation(fields: [cleanerId], references: [id])
+
+  @@index([cleanerId]) // Índice para consultas por limpador
+}
