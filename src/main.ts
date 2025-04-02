@@ -10,12 +10,12 @@ async function bootstrap() {
     new ValidationPipe({
       transform: true,
       whitelist: true,
-    })
+    }),
   )
 
   // Configuração do Swagger API
   const config = new DocumentBuilder()
-    .setTitle('CleanUp APIs')
+    .setTitle('CleanUp API')
     .setDescription('API list and descriptions')
     .setVersion('1.0')
     .build()

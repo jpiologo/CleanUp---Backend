@@ -19,7 +19,7 @@ model User {
   lastName            String
   email               String        @unique // O @unique já cria um índice automaticamente
   password            String // Assumindo que será criptografado na aplicação
-  identityDocument    String
+  identityDocument    String?
   phone               String
   role                UserRole      @default(CLIENT)
   addresses           Address[]

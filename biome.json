@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": []
+    "ignore": ["src/**/*.controller.ts"]
   },
   "formatter": {
     "enabled": true,
