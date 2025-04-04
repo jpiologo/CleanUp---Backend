@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Controller, Get } from '@nestjs/common'
 // biome-ignore lint/style/useImportType: <explanation>
 import { AppService } from './app.service'
@@ -6,8 +7,8 @@ import { AppService } from './app.service'
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello()
-  }
+  // @Get()
+  // getHello(): string {
+  //   return this.appService.getHello()
+  // }
 }
