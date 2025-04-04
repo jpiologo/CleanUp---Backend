@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
+// biome-ignore lint/style/useImportType: <explanation>
 import { CreatePlanDto } from './dto/create-plan.dto';
+// biome-ignore lint/style/useImportType: <explanation>
 import { UpdatePlanDto } from './dto/update-plan.dto';
 
 @Injectable()
@@ -9,6 +12,7 @@ export class PlanService {
   }
 
   findAll() {
+    // biome-ignore lint/style/noUnusedTemplateLiteral: <explanation>
     return `This action returns all plan`;
   }
 
