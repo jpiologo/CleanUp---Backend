@@ -15,7 +15,7 @@ export class UsersService {
     // Checa se o usuário já existe
     const existingUser = await this.prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      throw new ConflictException('Usuário já cadastrado com este email.');
+      throw new ConflictException('User already exists.');
     }
 
     // Hash na senha
