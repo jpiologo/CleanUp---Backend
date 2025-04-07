@@ -1,8 +1,9 @@
 /* biome-ignore lint/style/useDecorators: NestJS decorators are required */
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { UpdateUsersDto } from './dto/update-user.dto';
 
 @ApiTags('users') // Nome da categoria no Swagger
 @Controller('users')
@@ -16,4 +17,13 @@ export class UsersController {
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update a user by ID' })
+  @ApiResponse({ status: 200, description: 'User updated successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  update(@Param('id') id: string, @Body() updateUsersDto: UpdateUsersDto) {
+    return this.usersService.update(id, updateUsersDto);
+  }
+
 }

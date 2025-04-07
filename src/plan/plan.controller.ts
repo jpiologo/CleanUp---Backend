@@ -46,6 +46,6 @@ export class PlanController {
   @ApiResponse({ status: 200, description: 'Plan deleted' })
   @ApiResponse({ status: 404, description: 'Plan not found' })
   remove(@Param('id') id: string) {
-    return this.planService.remove(+id);
+    return this.planService.remove(id);
   }
 }

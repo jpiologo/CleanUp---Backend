@@ -1,9 +1,18 @@
-import { Injectable, ConflictException } from '@nestjs/common'
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common'
 // biome-ignore lint/style/useImportType: <explanation>
 import { PrismaService } from '../../prisma/prisma.service'
 // biome-ignore lint/style/useImportType: <explanation>
 import { CreateUserDto } from './dto/create-user.dto'
 import * as bcrypt from 'bcrypt'
+// biome-ignore lint/style/useImportType: <explanation>
+import { UpdateUsersDto } from './dto/update-user.dto'
+// biome-ignore lint/style/useImportType: <explanation>
+import { User } from '@prisma/client'
 
 @Injectable()
 export class UsersService {
@@ -24,9 +33,10 @@ export class UsersService {
     // Criando usuário no banco de dados (await é obrigatório aqui)
     const user = await this.prisma.user.create({
       data: {
+        ...rest,
         email,
         password: hashedPassword,
-        ...rest,
+        role: 'CLIENT',
       },
     })
 
@@ -34,5 +44,36 @@ export class UsersService {
     const { password: _, ...result } = user
 
     return result
+  }
+
+  async update(id: string, updateUsersDto: UpdateUsersDto): Promise<User> {
+    try {
+      // Separa a senha do resto dos dados
+      const { password, ...rest } = updateUsersDto
+  
+      // Verifica se o usuário existe
+      const user = await this.prisma.user.findUnique({ where: { id } })
+      if (!user) throw new NotFoundException('User not found')
+  
+      // Prepara os dados para atualização
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+              const dataToUpdate: any = { ...rest }
+  
+      // Se a senha foi enviada, aplica hash
+      if (password) {
+        dataToUpdate.password = await bcrypt.hash(password, 10)
+      }
+  
+      // Atualiza o usuário com os dados processados
+      const updatedUser = await this.prisma.user.update({
+        where: { id },
+        data: dataToUpdate,
+      })
+  
+      return updatedUser
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error
+      throw new Error(`Error updating user: ${error.message}`)
+    }
   }
 }

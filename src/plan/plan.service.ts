@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 // biome-ignore lint/style/useImportType: <explanation>
 import { CreatePlanDto } from './dto/create-plan.dto'
 // biome-ignore lint/style/useImportType: <explanation>
@@ -49,7 +49,24 @@ export class PlanService {
     }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} plan`
+  async remove(id: string): Promise<string> {
+    try {
+      const plan = await this.prisma.plan.findUnique({
+        where: { id },
+      })
+
+      if (!plan) throw new NotFoundException(`Plan with id ${id} not found`)
+
+      await this.prisma.plan.delete({
+        where: { id },
+      })
+
+      return `Plan with id ${id} deleted successfully`
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error
+      }
+      throw new InternalServerErrorException('Error deleting plan')
+    }
   }
 }
