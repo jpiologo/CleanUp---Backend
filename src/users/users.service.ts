@@ -18,6 +18,30 @@ import { User } from '@prisma/client'
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
+  findAll() {
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
+  }
+
+  async findOne(id: string): Promise<User> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    })
+    if (!user) throw new NotFoundException(`User with id ${id} not found`)
+
+    return user
+  }
+
+
   async create(createUserDto: CreateUserDto) {
     const { email, password, ...rest } = createUserDto
 

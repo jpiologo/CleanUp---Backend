@@ -1,19 +1,34 @@
 /* biome-ignore lint/style/useDecorators: NestJS decorators are required */
-import { Controller, Post, Body, Patch, Param } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Get, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { UpdateUsersDto } from './dto/update-user.dto';
 
-@ApiTags('users') // Nome da categoria no Swagger
+@ApiTags('Users') // Nome da categoria no Swagger
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  @Get()
+  @ApiOperation({ summary: 'Get all users or a specific one' })
+  @ApiQuery({ name: 'id', required: false, description: 'User ID (opcional)' })
+  @ApiResponse({ status: 200, description: 'Success' })
+  @ApiResponse({ status: 400, description: 'Invalid ID' })
+  @ApiResponse({ status: 404, description: 'User not found if ID provided' })
+  findAllOrOne(@Query('id') id?: string) {
+    if (id) {
+      
+      return this.usersService.findOne(id);
+    }
+    
+    return this.usersService.findAll();
+  }
+
   @Post()
-  @ApiOperation({ summary: 'Cadastrar um novo usuário' })
-  @ApiResponse({ status: 201, description: 'Usuário criado com sucesso.' })
-  @ApiResponse({ status: 409, description: 'Usuário já cadastrado.' })
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiResponse({ status: 201, description: 'User successfully created' })
+  @ApiResponse({ status: 409, description: 'User already exists' })
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }

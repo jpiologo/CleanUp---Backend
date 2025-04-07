@@ -22,6 +22,7 @@ model User {
   identityDocument    String?
   phone               String
   role                UserRole      @default(CLIENT)
+  isActive            Boolean       @default(true)
   addresses           Address[]
   appointmentsClient  Appointment[] @relation("ClientAppointments")
   appointmentsCleaner Appointment[] @relation("CleanerAppointments")
