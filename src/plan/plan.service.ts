@@ -11,6 +11,7 @@ import { Plan } from '@prisma/client'
 
 @Injectable()
 export class PlanService {
+  //database connection
   constructor(private prisma: PrismaService) {}
 
   async create(createPlanDto: CreatePlanDto): Promise<Plan> {
@@ -32,8 +33,20 @@ export class PlanService {
     return plan
   }
 
-  update(id: number, updatePlanDto: UpdatePlanDto) {
-    return `This action updates a #${id} plan`
+  async update(id: string, updatePlanDto: UpdatePlanDto): Promise<Plan> {
+    try {
+      const updatedPlan = await this.prisma.plan.update({
+        where: { id },
+        data: updatePlanDto,
+      })
+      return updatedPlan
+    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (error.code === 'P2025') {
+        throw new NotFoundException(`Plan with id ${id} not found`)
+      }
+      throw error
+    }
   }
 
   remove(id: number) {

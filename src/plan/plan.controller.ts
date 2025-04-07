@@ -38,7 +38,7 @@ export class PlanController {
   @ApiResponse({ status: 200, description: 'Plan updated' })
   @ApiResponse({ status: 404, description: 'Plan not found' })
   update(@Param('id') id: string, @Body() updatePlanDto: UpdatePlanDto) {
-    return this.planService.update(+id, updatePlanDto);
+    return this.planService.update(id, updatePlanDto);
   }
 
   @Delete(':id')
