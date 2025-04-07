@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 // biome-ignore lint/style/useImportType: <explanation>
 import { CreatePlanDto } from './dto/create-plan.dto'
 // biome-ignore lint/style/useImportType: <explanation>
@@ -20,12 +20,16 @@ export class PlanService {
   }
 
   findAll() {
-    // biome-ignore lint/style/noUnusedTemplateLiteral: <explanation>
-    return `This action returns all plan`
+    return this.prisma.plan.findMany()
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} plan`
+  async findOne(id: string): Promise<Plan> {
+    const plan = await this.prisma.plan.findUnique({
+      where: { id },
+    })
+    if (!plan) throw new NotFoundException(`Plan with id ${id} not found`)
+
+    return plan
   }
 
   update(id: number, updatePlanDto: UpdatePlanDto) {
