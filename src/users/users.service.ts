@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   Injectable,
@@ -41,7 +42,6 @@ export class UsersService {
     return user
   }
 
-
   async create(createUserDto: CreateUserDto) {
     const { email, password, ...rest } = createUserDto
 
@@ -64,37 +64,48 @@ export class UsersService {
       },
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...result } = user
 
     return result
   }
 
-  async update(id: string, updateUsersDto: UpdateUsersDto): Promise<User> {
+  async update(id: string, updateUsersDto: UpdateUsersDto) {
     try {
       // Separa a senha do resto dos dados
       const { password, ...rest } = updateUsersDto
-  
+
       // Verifica se o usuário existe
       const user = await this.prisma.user.findUnique({ where: { id } })
       if (!user) throw new NotFoundException('User not found')
-  
+
       // Prepara os dados para atualização
       // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-              const dataToUpdate: any = { ...rest }
-  
+      const dataToUpdate: any = { ...rest }
+
       // Se a senha foi enviada, aplica hash
       if (password) {
         dataToUpdate.password = await bcrypt.hash(password, 10)
       }
-  
+
       // Atualiza o usuário com os dados processados
       const updatedUser = await this.prisma.user.update({
         where: { id },
         data: dataToUpdate,
       })
-  
-      return updatedUser
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const {
+        id: _id,
+        password: _pass,
+        identityDocument: _identity,
+        phone: _phone,
+        role: _role,
+        isActive: _isActive,
+        createdAt: _createdAt,
+        ...infos
+      } = updatedUser
+
+      return infos
     } catch (error) {
       if (error instanceof NotFoundException) throw error
       throw new Error(`Error updating user: ${error.message}`)
