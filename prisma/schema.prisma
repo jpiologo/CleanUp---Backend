@@ -32,7 +32,7 @@ model User {
   Notification        Notification[]
   CleanerAvailability CleanerAvailability[]
 
-  @@index([email]) // Índice explícito em email (opcional, já que @unique já o faz)
+  @@index([email])
 }
 
 model Address {

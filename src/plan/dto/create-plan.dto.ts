@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger'
-import type { PlanRecurrence } from '@prisma/client'
-import { IsString, IsNotEmpty, IsNumber } from 'class-validator'
+import { PlanRecurrence } from '@prisma/client'
+import { IsString, IsNotEmpty, IsNumber, IsEnum } from 'class-validator'
 
 export class CreatePlanDto {
   @ApiProperty({ example: 'Shiny' })
@@ -13,8 +13,8 @@ export class CreatePlanDto {
   @IsNumber()
   price: number
 
-  @ApiProperty({ example: 'ANNUAL' })
-  @IsString()
+  @ApiProperty({ example: 'ANNUAL', enum: PlanRecurrence })
+  @IsEnum(PlanRecurrence)
   @IsNotEmpty()
   recurrence: PlanRecurrence
 
