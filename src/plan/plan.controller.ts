@@ -2,12 +2,17 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { PlanService } from './plan.service';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
+@ApiTags('plan')
 @Controller('plan')
 export class PlanController {
   constructor(private readonly planService: PlanService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Register a new plan' })
+  @ApiResponse({ status: 201, description: 'Plan created' })
+  @ApiResponse({ status: 500, description: 'Internal Server Error' })
   create(@Body() createPlanDto: CreatePlanDto) {
     return this.planService.create(createPlanDto);
   }
