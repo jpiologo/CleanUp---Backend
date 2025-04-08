@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config'
 import { UsersModule } from './users/users.module'
 import { PrismaModule } from '../prisma/prisma.module';
 import { PlanModule } from './plan/plan.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { PlanModule } from './plan/plan.module';
       isGlobal: true, //Torna as variaveis do .env acessiveis globalmente
     }),
     PlanModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
