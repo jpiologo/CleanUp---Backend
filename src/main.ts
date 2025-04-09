@@ -16,8 +16,15 @@ async function bootstrap() {
   // Configuração do Swagger API
   const config = new DocumentBuilder()
     .setTitle('CleanUp API')
-    .setDescription('API list and descriptions')
+    .setDescription('API documentation for CleanUp application')
     .setVersion('1.0')
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      name: 'Authorization',
+      in: 'header',
+    })
     .build()
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('api-docs', app, document)

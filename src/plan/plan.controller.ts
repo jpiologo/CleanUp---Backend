@@ -1,9 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { PlanService } from './plan.service';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
 @ApiTags('Subscription Plans') // Nome da categoria no Swagger
 @Controller('plans')
@@ -25,6 +27,8 @@ export class PlanController {
     return this.planService.findAll();
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(UserRole.ADMIN)
   @Post()
   @ApiOperation({ summary: 'Register a new plan' })
   @ApiResponse({ status: 201, description: 'Plan created' })
@@ -33,6 +37,8 @@ export class PlanController {
     return this.planService.create(createPlanDto);
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(UserRole.ADMIN)
   @Patch(':id')
   @ApiOperation({ summary: 'Update a plan by ID' })
   @ApiResponse({ status: 200, description: 'Plan updated' })
@@ -41,6 +47,8 @@ export class PlanController {
     return this.planService.update(id, updatePlanDto);
   }
 
+  @UseGuards(AuthGuard('jwt'))
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a plan by ID' })
   @ApiResponse({ status: 200, description: 'Plan deleted' })
