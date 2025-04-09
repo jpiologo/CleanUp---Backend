@@ -37,7 +37,7 @@ model User {
 }
 
 model Address {
-  id           String  @id @default(uuid())
+  id           String        @id @default(uuid())
   street       String
   number       String
   neighborhood String
@@ -48,7 +48,8 @@ model Address {
   complement   String?
   reference    String?
   userId       String
-  user         User    @relation(fields: [userId], references: [id])
+  user         User          @relation(fields: [userId], references: [id])
+  Appointment  Appointment[]
 
   @@index([userId]) // Índice para consultas por usuário
 }
@@ -69,11 +70,13 @@ model Appointment {
   planId         String?
   clientId       String
   cleanerId      String?
+  addressId      String
 
   cleaningType CleaningType @relation(fields: [cleaningTypeId], references: [id])
   plan         Plan?        @relation(fields: [planId], references: [id])
   client       User         @relation("ClientAppointments", fields: [clientId], references: [id])
   cleaner      User?        @relation("CleanerAppointments", fields: [cleanerId], references: [id])
+  address      Address      @relation(fields: [addressId], references: [id])
 
   Payment Payment[]
 
