@@ -2,8 +2,9 @@
 import { Controller, Get } from '@nestjs/common'
 // biome-ignore lint/style/useImportType: <explanation>
 import { AppService } from './app.service'
-
-@Controller()
+import { ApiTags } from '@nestjs/swagger'
+@ApiTags('Application Status')
+@Controller('health')
 export class AppController {
   constructor(private readonly appService: AppService) {}
 

@@ -6,7 +6,7 @@ import { UpdatePlanDto } from './dto/update-plan.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('Subscription Plans') // Nome da categoria no Swagger
-@Controller('plan')
+@Controller('plans')
 export class PlanController {
   constructor(private readonly planService: PlanService) {}
 
