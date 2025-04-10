@@ -147,7 +147,9 @@ model CleanerProfile {
 model CleaningType {
   id             String           @id @default(uuid())
   name           String
+  description    String?
   price          Decimal          @db.Decimal(10, 2)
+  duration       Int?
   appointments   Appointment[]
   CleanerProfile CleanerProfile[] @relation("Specialty")
 }
