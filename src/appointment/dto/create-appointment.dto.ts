@@ -36,9 +36,9 @@ export class CreateAppointmentDto {
   planId?: string
 
   @ApiProperty({ example: 'cleaner-id-uuid', required: false })
-  @IsOptional()
+  @IsNotEmpty()
   @IsUUID()
-  cleanerId?: string
+  cleanerId: string
 
   @ApiProperty({ example: 'address-id-uuid' })
   @IsNotEmpty()

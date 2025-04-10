@@ -4,15 +4,13 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { UpdateUsersDto } from './dto/update-user.dto';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('Users') // Nome da categoria no Swagger
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
-  @Roles(UserRole.ADMIN)
   @Get()
   @ApiOperation({ summary: 'Get all users or a specific one' })
   @ApiQuery({ name: 'id', required: false, description: 'User ID (opcional)' })
@@ -28,6 +26,7 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Public()
   @Post()
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User successfully created' })

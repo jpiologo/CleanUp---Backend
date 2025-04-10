@@ -5,14 +5,10 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common'
-// biome-ignore lint/style/useImportType: <explanation>
 import { PrismaService } from '../../prisma/prisma.service'
-// biome-ignore lint/style/useImportType: <explanation>
 import { CreateUserDto } from './dto/create-user.dto'
 import * as bcrypt from 'bcrypt'
-// biome-ignore lint/style/useImportType: <explanation>
 import { UpdateUsersDto } from './dto/update-user.dto'
-// biome-ignore lint/style/useImportType: <explanation>
 import { User } from '@prisma/client'
 
 @Injectable()
@@ -92,8 +88,7 @@ export class UsersService {
         where: { id },
         data: dataToUpdate,
       })
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      
       const {
         id: _id,
         password: _pass,

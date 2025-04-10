@@ -1,9 +1,6 @@
-// biome-ignore lint/style/useImportType: <explanation>
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common'
-// biome-ignore lint/style/useImportType: <explanation>
 import { Reflector } from '@nestjs/core'
 import { ROLES_KEY } from '../decorators/roles.decorator'
-// biome-ignore lint/style/useImportType: <explanation>
 import { UserRole } from '@prisma/client'
 
 interface RequestUser {

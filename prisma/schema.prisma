@@ -38,9 +38,10 @@ model User {
 
 model Address {
   id           String        @id @default(uuid())
+  isPrimary    Boolean       @default(true)
   street       String
   number       String
-  neighborhood String
+  neighborhood String?
   city         String
   state        String
   country      String
@@ -69,13 +70,13 @@ model Appointment {
   cleaningTypeId String
   planId         String?
   clientId       String
-  cleanerId      String?
+  cleanerId      String
   addressId      String
 
   cleaningType CleaningType @relation(fields: [cleaningTypeId], references: [id])
   plan         Plan?        @relation(fields: [planId], references: [id])
   client       User         @relation("ClientAppointments", fields: [clientId], references: [id])
-  cleaner      User?        @relation("CleanerAppointments", fields: [cleanerId], references: [id])
+  cleaner      User         @relation("CleanerAppointments", fields: [cleanerId], references: [id])
   address      Address      @relation(fields: [addressId], references: [id])
 
   Payment Payment[]
