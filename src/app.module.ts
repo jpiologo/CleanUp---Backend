@@ -14,6 +14,7 @@ import { AddressModule } from './address/address.module'
 
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
 import { CleaningTypeModule } from './cleaning-type/cleaning-type.module';
+import { UserPlanModule } from './user-plan/user-plan.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { CleaningTypeModule } from './cleaning-type/cleaning-type.module';
     AppointmentModule,
     AddressModule,
     CleaningTypeModule,
+    UserPlanModule,
   ],
   controllers: [AppController],
   providers: [
