@@ -13,83 +13,10 @@ enum UserRole {
   ADMIN
 }
 
-model User {
-  id                  String        @id @default(uuid())
-  firstName           String
-  lastName            String
-  email               String        @unique // O @unique já cria um índice automaticamente
-  password            String
-  identityDocument    String?
-  phone               String
-  role                UserRole      @default(CLIENT)
-  isActive            Boolean       @default(true)
-  addresses           Address[]
-  appointmentsClient  Appointment[] @relation("ClientAppointments")
-  appointmentsCleaner Appointment[] @relation("CleanerAppointments")
-  userPlans           UserPlan[]
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-
-  Notification        Notification[]
-  CleanerAvailability CleanerAvailability[]
-
-  @@index([email])
-}
-
-model Address {
-  id           String        @id @default(uuid())
-  isPrimary    Boolean       @default(true)
-  street       String
-  number       String
-  neighborhood String?
-  city         String
-  state        String
-  country      String
-  zipCode      String
-  complement   String?
-  reference    String?
-  userId       String
-  user         User          @relation(fields: [userId], references: [id])
-  Appointment  Appointment[]
-
-  @@index([userId]) // Índice para consultas por usuário
-}
-
 enum AppointmentStatus {
   SCHEDULED
   COMPLETED
   CANCELED
-}
-
-model Appointment {
-  id             String            @id @default(uuid())
-  dateTime       DateTime
-  duration       Int? // Duração estimada em minutos (opcional)
-  status         AppointmentStatus
-  notes          String?
-  cleaningTypeId String
-  planId         String?
-  clientId       String
-  cleanerId      String
-  addressId      String
-
-  cleaningType CleaningType @relation(fields: [cleaningTypeId], references: [id])
-  plan         Plan?        @relation(fields: [planId], references: [id])
-  client       User         @relation("ClientAppointments", fields: [clientId], references: [id])
-  cleaner      User         @relation("CleanerAppointments", fields: [cleanerId], references: [id])
-  address      Address      @relation(fields: [addressId], references: [id])
-
-  Payment Payment[]
-
-  @@index([dateTime]) // Índice para consultas por data
-  @@index([status]) // Índice para filtragem por status
-}
-
-model CleaningType {
-  id           String        @id @default(uuid())
-  name         String
-  price        Decimal
-  appointments Appointment[]
 }
 
 enum PlanRecurrence {
@@ -99,10 +26,136 @@ enum PlanRecurrence {
   ANNUAL
 }
 
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  PIX
+  BANK_TRANSFER
+}
+
+enum NotificationType {
+  REMINDER
+  CONFIRMATION
+  CANCELLATION
+}
+
+enum WeekDay {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
+model User {
+  id               String   @id @default(uuid())
+  firstName        String
+  lastName         String
+  email            String   @unique
+  password         String
+  identityDocument String   @unique
+  phone            String   @unique
+  role             UserRole @default(CLIENT)
+  isActive         Boolean  @default(true)
+  language         String   @default("en-US")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  addresses            Address[]
+  appointmentsAsClient Appointment[]   @relation("ClientAppointments")
+  userPlans            UserPlan[]
+  Notification         Notification[]
+  cleanerProfile       CleanerProfile?
+  Review               Review[]
+
+  @@index([email])
+}
+
+model Address {
+  id           String  @id @default(uuid())
+  isPrimary    Boolean @default(false)
+  street       String
+  number       String
+  neighborhood String?
+  city         String
+  state        String
+  country      String
+  zipCode      String
+  complement   String?
+  reference    String?
+  latitude     Float?
+  longitude    Float?
+  userId       String
+
+  user        User          @relation(fields: [userId], references: [id])
+  Appointment Appointment[]
+
+  @@index([userId])
+}
+
+model Appointment {
+  id             String            @id @default(uuid())
+  dateTime       DateTime
+  duration       Int               @default(60)
+  status         AppointmentStatus
+  notes          String?           @db.Text
+  cleaningTypeId String
+  planId         String?
+  clientId       String
+  cleanerId      String
+  addressId      String
+
+  cleaningType CleaningType   @relation(fields: [cleaningTypeId], references: [id])
+  plan         Plan?          @relation(fields: [planId], references: [id])
+  client       User           @relation("ClientAppointments", fields: [clientId], references: [id])
+  cleaner      CleanerProfile @relation(fields: [cleanerId], references: [id])
+  address      Address        @relation(fields: [addressId], references: [id])
+
+  Payment Payment[]
+  Review  Review[]
+
+  @@index([dateTime])
+  @@index([clientId, status])
+  @@index([cleanerId, status])
+}
+
+model CleanerProfile {
+  id           String  @id @default(uuid())
+  bio          String?
+  rating       Float   @default(0)
+  reviewsCount Int     @default(0)
+  isActive     Boolean @default(true)
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  cleaningSpecialty CleaningType[]        @relation("Specialty")
+  appointments      Appointment[]
+  availability      CleanerAvailability[]
+  Review            Review[]
+
+  @@index([userId])
+}
+
+model CleaningType {
+  id             String           @id @default(uuid())
+  name           String
+  price          Decimal          @db.Decimal(10, 2)
+  appointments   Appointment[]
+  CleanerProfile CleanerProfile[] @relation("Specialty")
+}
+
 model Plan {
   id               String         @id @default(uuid())
   name             String
-  price            Decimal
+  price            Decimal        @db.Decimal(10, 2)
   recurrence       PlanRecurrence
   daysToExpire     Int
   cleaningsPerWeek Int
@@ -118,42 +171,32 @@ model UserPlan {
   endDate       DateTime
   active        Boolean  @default(true)
   usedCleanings Int      @default(0)
-  paymentId     String? // Referência externa de pagamento (ex: Stripe)
+  paymentId     String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id])
   plan Plan @relation(fields: [planId], references: [id])
 
-  @@index([userId]) // Índice para consultas por usuário
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
+  @@index([userId])
 }
 
 model Payment {
   id            String        @id @default(uuid())
   appointmentId String
-  amount        Decimal
-  method        String // Ex: "CreditCard", "PIX", etc.
-  transactionId String? // Referência externa (ex: ID do Stripe)
+  amount        Decimal       @db.Decimal(10, 2)
+  method        PaymentMethod
+  transactionId String?
   status        PaymentStatus
+  currency      String        @default("BRL")
   createdAt     DateTime      @default(now())
 
   appointment Appointment @relation(fields: [appointmentId], references: [id])
 }
 
-enum NotificationType {
-  REMINDER
-  CONFIRMATION
-  CANCELLATION
-}
-
 model Notification {
   id        String           @id @default(uuid())
+  title     String
   message   String
   type      NotificationType
   read      Boolean          @default(false)
@@ -162,17 +205,34 @@ model Notification {
 
   user User @relation(fields: [userId], references: [id])
 
-  @@index([userId]) // Índice para consultas por usuário
+  @@index([userId])
 }
 
 model CleanerAvailability {
   id        String   @id @default(uuid())
   cleanerId String
-  weekDay   Int // 0 = Sunday, 1 = Monday, etc.
-  startTime DateTime // Pode ser ajustado para String se preferir "HH:MM"
-  endTime   DateTime // Pode ser ajustado para String se preferir "HH:MM"
+  weekDay   WeekDay
+  startTime DateTime
+  endTime   DateTime
 
-  cleaner User @relation(fields: [cleanerId], references: [id])
+  cleaner CleanerProfile @relation(fields: [cleanerId], references: [id])
 
-  @@index([cleanerId]) // Índice para consultas por limpador
+  @@index([cleanerId, weekDay])
+}
+
+model Review {
+  id            String   @id @default(uuid())
+  rating        Float
+  comment       String?
+  cleanerId     String
+  clientId      String
+  appointmentId String? // Campo opcional adicionado
+  createdAt     DateTime @default(now())
+
+  cleaner     CleanerProfile @relation(fields: [cleanerId], references: [id])
+  client      User           @relation(fields: [clientId], references: [id])
+  appointment Appointment?   @relation(fields: [appointmentId], references: [id]) // Relação opcional
+
+  @@index([cleanerId])
+  @@index([appointmentId]) // Índice adicionado para consultas por appointmentId
 }

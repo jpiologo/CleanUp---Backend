@@ -12,6 +12,13 @@ import { AppointmentStatus } from '@prisma/client'
 export class AppointmentService {
   constructor(private prisma: PrismaService) {}
 
+  async findAllByUser(userId: string) {
+    return this.prisma.appointment.findMany({
+      where: { clientId: userId },
+      include: { address: true, cleaningType: true },
+    })
+  }
+
   async create(userId: string, dto: CreateAppointmentDto) {
     const address = await this.prisma.address.findUnique({
       where: { id: dto.addressId },
@@ -30,12 +37,7 @@ export class AppointmentService {
     })
   }
 
-  async findAllByUser(userId: string) {
-    return this.prisma.appointment.findMany({
-      where: { clientId: userId },
-      include: { address: true, cleaningType: true },
-    })
-  }
+  
 
   async update(id: string, userId: string, dto: UpdateAppointmentDto) {
     const appointment = await this.prisma.appointment.findUnique({

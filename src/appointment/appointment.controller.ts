@@ -27,6 +27,13 @@ import {
   @Controller('appointments')
   export class AppointmentController {
     constructor(private readonly service: AppointmentService) {}
+
+    @Get()
+    @ApiOperation({ summary: 'Listar agendamentos do usuário logado' })
+    @ApiResponse({ status: 200, description: 'Lista retornada com sucesso' })
+    findAll(@Request() req: { user: { id: string } }) {
+      return this.service.findAllByUser(req.user.id)
+    }
   
     @Post()
     @ApiOperation({ summary: 'Criar um novo agendamento' })
@@ -37,13 +44,6 @@ import {
       @Body() dto: CreateAppointmentDto,
     ): Promise<Appointment> {
       return this.service.create(req.user.id, dto)
-    }
-  
-    @Get()
-    @ApiOperation({ summary: 'Listar agendamentos do usuário logado' })
-    @ApiResponse({ status: 200, description: 'Lista retornada com sucesso' })
-    findAll(@Request() req: { user: { id: string } }) {
-      return this.service.findAllByUser(req.user.id)
     }
   
     @Patch(':id')
