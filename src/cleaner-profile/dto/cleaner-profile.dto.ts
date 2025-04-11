@@ -1,5 +1,5 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateCleanerProfileDto {
   @ApiProperty({ description: 'ID of the user to associate the profile with' })
@@ -13,3 +13,13 @@ export class CreateCleanerProfileDto {
 }
 
 export class UpdateCleanerProfileDto extends PartialType(CreateCleanerProfileDto) {}
+
+export class DisableCleanerProfileDto {
+  @ApiProperty({ description: 'ID of the user to disable profile for' })
+  @IsUUID()
+  userId: string;
+
+  @ApiProperty({ description: 'Whether the profile is active' })
+  @IsBoolean()
+  isActive: boolean;
+}

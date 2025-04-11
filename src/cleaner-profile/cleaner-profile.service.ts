@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateCleanerProfileDto, UpdateCleanerProfileDto } from './dto/cleaner-profile.dto';
+import { CreateCleanerProfileDto, UpdateCleanerProfileDto, DisableCleanerProfileDto } from './dto/cleaner-profile.dto';
 
 @Injectable()
 export class CleanerProfileService {
@@ -37,18 +37,28 @@ export class CleanerProfileService {
     });
   }
 
-  async findNearby(clientId: string) {
-    const client = await this.prisma.user.findUnique({
-      where: { id: clientId },
-      include: { addresses: true },
+  async disable(userId: string, dto: DisableCleanerProfileDto) {
+    const profile = await this.prisma.cleanerProfile.findUnique({ where: { userId } });
+    if (!profile) throw new NotFoundException('Cleaner profile not found');
+
+    return this.prisma.cleanerProfile.update({
+      where: { userId },
+      data: {
+        isActive: dto.isActive,
+      },
+    });
+  }
+
+  async findNearby(clientId: string, addressId: string) {
+    const clientAddress = await this.prisma.address.findFirst({
+      where: {
+        id: addressId,
+        userId: clientId,
+      },
     });
 
-    const clientAddress = client && Array.isArray(client.addresses)
-      ? client.addresses.find((a: any) => a.isPrimary)
-      : null;
-
-    if (!clientAddress || clientAddress.latitude == null || clientAddress.longitude == null) {
-      throw new NotFoundException('Client primary address with coordinates not found');
+    if (!clientAddress?.latitude || !clientAddress?.longitude) {
+      throw new NotFoundException('Selected address with coordinates not found');
     }
 
     const allCleaners = await this.prisma.cleanerProfile.findMany({
@@ -63,14 +73,12 @@ export class CleanerProfileService {
     });
 
     const nearbyCleaners = allCleaners.filter(cleaner => {
-      const address = Array.isArray(cleaner.user?.addresses)
-        ? cleaner.user.addresses.find((a: any) => a.isPrimary)
-        : null;
-      if (!address || address.latitude == null || address.longitude == null) return false;
+      const address = cleaner.user?.addresses.find(addr => addr.isPrimary);
+      if (!address || !clientAddress.longitude || !address.latitude || !address.longitude || !clientAddress.latitude ) return false;
 
       const dist = Math.sqrt(
-        Math.pow(address.latitude - clientAddress.latitude, 2) +
-        Math.pow(address.longitude - clientAddress.longitude, 2),
+        (address.latitude - clientAddress.latitude) ** 2 +
+        (address.longitude - clientAddress.longitude) ** 2
       );
 
       return dist < 0.2;
