@@ -7,6 +7,21 @@ import { UpdateUserPlanDto } from './dto/user-plan.dto';
 export class UserPlanService {
   constructor(private prisma: PrismaService) {}
 
+  async checkAndUpdateExpiredPlans() {
+    const now = new Date();
+    await this.prisma.userPlan.updateMany({
+      where: {
+        active: true,
+        endDate: {
+          lt: now,
+        },
+      },
+      data: {
+        active: false,
+      },
+    });
+  }
+
   async getMyPlan(userId: string) {
     return this.prisma.userPlan.findFirst({
       where: {
