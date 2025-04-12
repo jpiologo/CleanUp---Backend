@@ -30,8 +30,8 @@ export class CleanerProfileController {
   constructor(private readonly service: CleanerProfileService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Admin creates a cleaner profile for a user' })
+  @Roles(UserRole.ADMIN, UserRole.CLEANER)
+  @ApiOperation({ summary: 'Creates a cleaner profile (ADMIN and CLEANER only)' })
   @ApiResponse({ status: 201, description: 'Cleaner profile created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid request body' })
   @ApiResponse({ status: 403, description: 'Only users with CLEANER role can have a profile' })
@@ -46,7 +46,7 @@ export class CleanerProfileController {
   @ApiResponse({ status: 200, description: 'Cleaner profile disabled successfully' })
   @ApiResponse({ status: 404, description: 'Cleaner profile not found' })
   async disable(@Body() dto: DisableCleanerProfileDto) {
-    return this.service.disable(dto.userId, dto);
+    return this.service.disable(dto);
   }
 
   @Get('nearby')

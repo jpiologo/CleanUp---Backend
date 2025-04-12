@@ -8,8 +8,12 @@ export class CleanerProfileService {
 
   async create(userId: string, dto: CreateCleanerProfileDto) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user || user.role !== 'CLEANER') {
-      throw new ForbiddenException('Only users with CLEANER role can have a profile');
+    if (!user ||user.role !== 'CLEANER') {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.isActive) {
+      throw new ForbiddenException('User is not active, cannot create a profile');
     }
 
     const existing = await this.prisma.cleanerProfile.findUnique({ where: { userId } });
@@ -37,14 +41,20 @@ export class CleanerProfileService {
     });
   }
 
-  async disable(userId: string, dto: DisableCleanerProfileDto) {
+  async disable(dto: DisableCleanerProfileDto) {
+    const { userId } = dto;
     const profile = await this.prisma.cleanerProfile.findUnique({ where: { userId } });
+    
     if (!profile) throw new NotFoundException('Cleaner profile not found');
+
+    if (!profile.isActive) {
+      throw new ForbiddenException('Cleaner profile is already disabled');
+    }
 
     return this.prisma.cleanerProfile.update({
       where: { userId },
       data: {
-        isActive: dto.isActive,
+        isActive: false,
       },
     });
   }
