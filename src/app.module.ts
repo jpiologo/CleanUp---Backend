@@ -16,6 +16,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
 import { CleaningTypeModule } from './cleaning-type/cleaning-type.module';
 import { UserPlanModule } from './user-plan/user-plan.module';
 import { CleanerProfileModule } from './cleaner-profile/cleaner-profile.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { CleanerProfileModule } from './cleaner-profile/cleaner-profile.module';
     CleaningTypeModule,
     UserPlanModule,
     CleanerProfileModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [
