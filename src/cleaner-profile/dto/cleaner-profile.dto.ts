@@ -25,3 +25,15 @@ export class DisableCleanerProfileDto {
   @IsUUID()
   userId: string;
 }
+
+export class CleanerProfileWithUserDto {
+  id: string;
+  bio: string | null;
+  rating: number;
+  reviewsCount: number;
+  isActive: boolean;
+  user: {
+    firstName: string;
+    lastName: string;
+  };
+}

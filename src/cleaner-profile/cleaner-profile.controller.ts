@@ -16,7 +16,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { CleanerProfileService } from './cleaner-profile.service';
-import { CreateCleanerProfileDto, DisableCleanerProfileDto } from './dto/cleaner-profile.dto';
+import { CreateCleanerProfileDto, DisableCleanerProfileDto, CleanerProfileWithUserDto } from './dto/cleaner-profile.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { UserRole } from '@prisma/client';
@@ -63,7 +63,7 @@ export class CleanerProfileController {
   @ApiOperation({ summary: 'Get all registered cleaners' })
   @ApiResponse({ status: 200, description: 'List of cleaner profiles' })
   @ApiResponse({ status: 404, description: 'Bad Request' })
-  async findAll() {
+  async findAll(): Promise<CleanerProfileWithUserDto[]> {
     return this.service.findAll();
   }
 }

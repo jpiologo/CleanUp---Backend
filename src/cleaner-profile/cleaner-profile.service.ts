@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateCleanerProfileDto, UpdateCleanerProfileDto, DisableCleanerProfileDto } from './dto/cleaner-profile.dto';
+import { CreateCleanerProfileDto, UpdateCleanerProfileDto, DisableCleanerProfileDto, CleanerProfileWithUserDto } from './dto/cleaner-profile.dto';
 
 @Injectable()
 export class CleanerProfileService {
@@ -29,9 +29,17 @@ export class CleanerProfileService {
     });
   }
 
-  async findAll() {
+  async findAll(): Promise<CleanerProfileWithUserDto[]> {
     return this.prisma.cleanerProfile.findMany({
       where: { isActive: true },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+      }
     })
   }
 
