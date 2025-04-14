@@ -58,4 +58,12 @@ export class CleanerProfileController {
   async getNearby(@CurrentUser() user: { id: string }, @Query('addressId', ParseUUIDPipe) addressId: string) {
     return this.service.findNearby(user.id, addressId);
   }
+
+  @Get('')
+  @ApiOperation({ summary: 'Get all registered cleaners' })
+  @ApiResponse({ status: 200, description: 'List of cleaner profiles' })
+  @ApiResponse({ status: 404, description: 'Bad Request' })
+  async findAll() {
+    return this.service.findAll();
+  }
 }

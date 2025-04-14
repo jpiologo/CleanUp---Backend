@@ -14,7 +14,7 @@ export class PlanController {
 
   @Get()
   @ApiOperation({ summary: 'Get all plans or a specific plan by ID' })
-  @ApiQuery({ name: 'id', required: false, description: 'ID do plano (opcional)' })
+  @ApiQuery({ name: 'id', required: false, description: 'Plan Id (optional)' })
   @ApiResponse({ status: 200, description: 'Success' })
   @ApiResponse({ status: 400, description: 'Invalid ID' })
   @ApiResponse({ status: 404, description: 'Plan not found if ID provided' })

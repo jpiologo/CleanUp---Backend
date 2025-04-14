@@ -29,6 +29,12 @@ export class CleanerProfileService {
     });
   }
 
+  async findAll() {
+    return this.prisma.cleanerProfile.findMany({
+      where: { isActive: true },
+    })
+  }
+
   async update(userId: string, dto: UpdateCleanerProfileDto) {
     const profile = await this.prisma.cleanerProfile.findUnique({ where: { userId } });
     if (!profile) throw new NotFoundException('Cleaner profile not found');
