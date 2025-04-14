@@ -199,9 +199,9 @@ model Payment {
 model Notification {
   id        String           @id @default(uuid())
   title     String
-  message   String
+  message   String           @db.Text
   type      NotificationType
-  read      Boolean          @default(false)
+  isRead    Boolean          @default(false)
   userId    String
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt

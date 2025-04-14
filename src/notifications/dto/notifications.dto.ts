@@ -1,29 +1,40 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { NotificationType } from '@prisma/client'
-import { IsString, IsNotEmpty, IsBoolean, IsEnum } from 'class-validator'
+import {
+  IsString,
+  IsNotEmpty,
+  IsEnum,
+  MaxLength,
+  IsUUID,
+  IsBoolean,
+} from 'class-validator'
 
 export class CreateNotificationDto {
   @IsEnum(NotificationType)
   @IsNotEmpty()
-  @ApiProperty({ example: 'REMINDER' })
+  @ApiProperty({ example: 'REMINDER', enum: NotificationType })
   type: NotificationType
 
   @ApiProperty({ example: 'Do not forget your appointment for tomorrow!' })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   title: string
 
   @ApiProperty({ example: 'Lorem Ipsum' })
   @IsString()
   @IsNotEmpty()
+  @MaxLength(250)
   message: string
 
-  @ApiProperty({ example: true })
-  @IsBoolean()
+  @IsUUID()
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
   @IsNotEmpty()
-  read: boolean
+  userId: string
+}
 
-  @ApiProperty({ example: '' })
-
-    @ApiProperty({ example: '2023-10-01T12:00:00Z' })
+export class UpdateNotificationDto {
+  @IsBoolean()
+  @ApiProperty({ example: true, description: 'Whether the notification has been read' })
+  isRead: boolean
 }
