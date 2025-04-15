@@ -4,10 +4,32 @@ import {
   NotFoundException,
 } from '@nestjs/common'
 import { PrismaService } from 'prisma/prisma.service'
+import { CreateNotificationDto, NotificationResponseDto } from './dto/notifications.dto'
 
 @Injectable()
 export class NotificationsService {
   constructor(private prisma: PrismaService) {}
+
+  async create(dto: CreateNotificationDto): Promise<NotificationResponseDto> {
+    const { userId, ...notificationData } = dto
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    })
+
+    if (!user) {
+      throw new NotFoundException('User not found')
+    }
+
+    await this.prisma.notification.create({
+      data: {
+        ...notificationData,
+        userId,
+      },
+    })
+
+    return {message: 'Notification successfully created'}
+  }
 
   async delete(
     notificationId: string,
@@ -26,11 +48,11 @@ export class NotificationsService {
         'You are not allowed to delete this notification',
       )
     }
-    
+
     await this.prisma.notification.delete({
       where: { id: notificationId },
     })
 
-    return { message: 'Notification deleted successfully' }
+    return { message: 'Successfully deleted ' }
   }
 }
