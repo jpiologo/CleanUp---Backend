@@ -15,7 +15,7 @@ export class CreateNotificationDto {
   @ApiProperty({ example: 'REMINDER', enum: NotificationType })
   type: NotificationType
 
-  @ApiProperty({ example: 'Do not forget your appointment for tomorrow!' })
+  @ApiProperty({ example: 'Your appointment is scheduled for 10 AM tomorrow' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
