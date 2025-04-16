@@ -6,7 +6,6 @@ import {
   IsEnum,
   MaxLength,
   IsUUID,
-  IsBoolean,
 } from 'class-validator'
 
 export class CreateNotificationDto {
@@ -31,12 +30,6 @@ export class CreateNotificationDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
   @IsNotEmpty()
   userId: string
-}
-
-export class UpdateNotificationDto {
-  @IsBoolean()
-  @ApiProperty({ example: true, description: 'Whether the notification has been read' })
-  isRead: boolean
 }
 
 export class NotificationResponseDto {
