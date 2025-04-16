@@ -1,60 +1,84 @@
 // src/appointments/appointments.controller.ts
 import {
-    Controller,
-    Post,
-    Get,
-    Patch,
-    Param,
-    Body,
-    Request,
-    UseGuards,
-  } from '@nestjs/common'
-  import {
-    ApiTags,
-    ApiBearerAuth,
-    ApiOperation,
-    ApiResponse,
-  } from '@nestjs/swagger'
-  import { AppointmentService } from './appointment.service'
-  import { CreateAppointmentDto } from './dto/create-appointment.dto'
-  import { UpdateAppointmentDto } from './dto/update-appointment.dto'
-  import { AuthGuard } from '@nestjs/passport'
-  import { Appointment } from '@prisma/client'
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+} from '@nestjs/common'
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger'
+import { AppointmentService } from './appointment.service'
+import { CreateAppointmentDto } from './dto/appointment.dto'
+import { AuthGuard } from '@nestjs/passport'
+import { Appointment } from '@prisma/client'
+import { CurrentUser } from 'src/common/decorators/current-user.decorator'
   
-  @ApiTags('Appointments')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
-  @Controller('appointments')
-  export class AppointmentController {
-    constructor(private readonly service: AppointmentService) {}
-
-    @Get()
-    @ApiOperation({ summary: 'Listar agendamentos do usuário logado' })
-    @ApiResponse({ status: 200, description: 'Lista retornada com sucesso' })
-    findAll(@Request() req: { user: { id: string } }) {
-      return this.service.findAllByUser(req.user.id)
-    }
+@ApiTags('Appointments')
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'))
+@Controller('appointments')
+export class AppointmentController {
+  constructor(private readonly service: AppointmentService) {}
   
-    @Post()
-    @ApiOperation({ summary: 'Criar um novo agendamento' })
-    @ApiResponse({ status: 201, description: 'Agendamento criado com sucesso' })
-    @ApiResponse({ status: 400, description: 'Endereço inválido' })
-    create(
-      @Request() req: { user: { id: string } },
-      @Body() dto: CreateAppointmentDto,
-    ): Promise<Appointment> {
-      return this.service.create(req.user.id, dto)
-    }
-  
-    @Patch(':id')
-    @ApiOperation({ summary: 'Atualizar agendamento do usuário logado' })
-    @ApiResponse({ status: 200, description: 'Agendamento atualizado com sucesso' })
-    update(
-      @Param('id') id: string,
-      @Request() req: { user: { id: string } },
-      @Body() dto: UpdateAppointmentDto,
-    ) {
-      return this.service.update(id, req.user.id, dto)
-    }
+  @Post()
+  @ApiOperation({
+    summary: 'Create a new appointment',
+    description: `
+      Creates a new appointment for the authenticated user. 
+      The request must include appointment details such as date, time, and location.
+      The user must be authenticated, and the appointment will be associated with their user ID.
+      Returns the created appointment details upon success.
+    `,
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Appointment successfully created.',
+    type: Appointment, 
+    example: {
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      userId: '456e7890-e89b-12d3-a456-426614174001',
+      location: '21th Street 1111, New York, NY',
+      date: '2025-02-21T09:00:00.000Z',
+      status: 'SCHEDULED',
+      createdAt: '2025-01-10T12:00:00.000Z',
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data.',
+    example: {
+      statusCode: 400,
+      message: 'Invalid date format or required fields missing.',
+      error: 'Bad Request',
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized. Missing or invalid JWT token.',
+    example: {
+      statusCode: 401,
+      message: 'Unauthorized',
+    },
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict. The requested time slot is already booked.',
+    example: {
+      statusCode: 409,
+      message: 'The selected time slot is unavailable.',
+      error: 'Conflict',
+    },
+  })
+  async create(
+    @CurrentUser() user: { id: string },
+    @Body() dto: CreateAppointmentDto,
+  ): Promise<Appointment> {
+    return this.service.create(dto, user.id);
   }
+  
+}
   

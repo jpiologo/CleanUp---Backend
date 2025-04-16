@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString, IsOptional, IsInt, IsNumber } from 'class-validator'
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, PartialType } from '@nestjs/swagger'
 
 export class CreateCleaningTypeDto {
   @ApiProperty({ example: 'Deep Cleaning' })
@@ -22,7 +22,7 @@ export class CreateCleaningTypeDto {
   duration?: number
 }
 
-export class UpdateCleaningTypeDto extends CreateCleaningTypeDto {
+export class UpdateCleaningTypeDto extends PartialType(CreateCleaningTypeDto) {
   @ApiProperty({ example: 'a12cde34-b56f-78gh-90ij-klmnopqrstuv' })
   @IsString()
   @IsNotEmpty()

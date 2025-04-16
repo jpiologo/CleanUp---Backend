@@ -14,6 +14,7 @@ enum UserRole {
 }
 
 enum AppointmentStatus {
+  PENDING
   SCHEDULED
   COMPLETED
   CANCELED
@@ -103,7 +104,6 @@ model Address {
 model Appointment {
   id             String            @id @default(uuid())
   dateTime       DateTime
-  duration       Int               @default(60)
   status         AppointmentStatus
   notes          String?           @db.Text
   cleaningTypeId String
