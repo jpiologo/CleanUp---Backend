@@ -12,7 +12,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 import { AppointmentService } from './appointment.service'
-import { CreateAppointmentDto } from './dto/appointment.dto'
+import { AppointmentResponseDto, CreateAppointmentDto } from './dto/appointment.dto'
 import { AuthGuard } from '@nestjs/passport'
 import { Appointment } from '@prisma/client'
 import { CurrentUser } from 'src/common/decorators/current-user.decorator'
@@ -37,7 +37,7 @@ export class AppointmentController {
   @ApiResponse({
     status: 201,
     description: 'Appointment successfully created.',
-    type: Appointment, 
+    type: AppointmentResponseDto, 
     example: {
       id: '123e4567-e89b-12d3-a456-426614174000',
       userId: '456e7890-e89b-12d3-a456-426614174001',
