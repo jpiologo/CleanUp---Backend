@@ -14,7 +14,6 @@ import {
 import { AppointmentService } from './appointment.service'
 import { AppointmentResponseDto, CreateAppointmentDto } from './dto/appointment.dto'
 import { AuthGuard } from '@nestjs/passport'
-import { Appointment } from '@prisma/client'
 import { CurrentUser } from 'src/common/decorators/current-user.decorator'
   
 @ApiTags('Appointments')
@@ -73,10 +72,7 @@ export class AppointmentController {
       error: 'Conflict',
     },
   })
-  async create(
-    @CurrentUser() user: { id: string },
-    @Body() dto: CreateAppointmentDto,
-  ): Promise<Appointment> {
+  async create(@CurrentUser() user: { id: string }, @Body() dto: CreateAppointmentDto,): Promise<AppointmentResponseDto> {
     return this.service.create(dto, user.id);
   }
   
