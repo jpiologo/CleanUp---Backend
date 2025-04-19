@@ -5,72 +5,65 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { StripeService } from '../payments/stripe/stripe.service';
-import {
-  CreateAppointmentDto,
-  AppointmentResponseDto,
-} from './dto/appointment.dto';
-import {
-  AppointmentStatus,
-  PaymentMethod,
-  PaymentStatus,
-} from '@prisma/client';
+import { CreateAppointmentDto,AppointmentResponseDto } from './dto/appointment.dto';
+import {AppointmentStatus} from '@prisma/client';
 import { startOfWeek, endOfWeek } from 'date-fns';
 
 @Injectable()
 export class AppointmentService {
   private readonly logger = new Logger(AppointmentService.name);
 
-  constructor(
-    private prisma: PrismaService,
-    private stripeService: StripeService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async create(
     dto: CreateAppointmentDto,
     clientId: string,
   ): Promise<AppointmentResponseDto> {
-    this.logger.log(`Creating appointment for client ${clientId}`);
+    this.logger.log(`Criando agendamento para cliente ${clientId}`);
 
-    // 1. Validate dateTime is in the future
+    // 1. Validar se a data é futura
     if (dto.dateTime < new Date()) {
-      throw new ForbiddenException('Cannot schedule appointments in the past');
+      throw new ForbiddenException('Não é possível agendar no passado');
     }
 
-    // 2. Validate user subscription plan and usage
+    // 2. Validar plano de assinatura e uso
     let useFreeSession = false;
     if (dto.planId) {
       const userPlan = await this.prisma.userPlan.findFirst({
         where: { id: dto.planId, userId: clientId, isActive: true },
       });
-      if (!userPlan) throw new NotFoundException('Invalid subscription plan');
+      if (!userPlan) throw new NotFoundException('Plano de assinatura inválido');
 
       const weekStart = startOfWeek(dto.dateTime, { weekStartsOn: 1 });
       const weekEnd = endOfWeek(dto.dateTime, { weekStartsOn: 1 });
       const sessionCount = await this.prisma.appointment.count({
-        where: { planId: dto.planId, clientId, dateTime: { gte: weekStart, lt: weekEnd } },
+        where: {
+          planId: dto.planId,
+          clientId,
+          dateTime: { gte: weekStart, lte: weekEnd },
+        },
       });
       if (sessionCount >= userPlan.cleaningsPerWeek) {
-        throw new ForbiddenException('You reached your limit for appointments');
+        throw new ForbiddenException('Limite de agendamentos atingido');
       }
       useFreeSession = true;
     }
 
-    // 3. Validate required entities
+    // 3. Validar entidades necessárias
     const { addressId, cleanerId, cleaningTypeId, dateTime, notes, planId } = dto;
     const address = await this.prisma.address.findUnique({ where: { id: addressId } });
-    if (!address) throw new NotFoundException('Address not found');
+    if (!address) throw new NotFoundException('Endereço não encontrado');
     const cleaningType = await this.prisma.cleaningType.findUnique({ where: { id: cleaningTypeId } });
-    if (!cleaningType) throw new NotFoundException('Invalid cleaning type');
+    if (!cleaningType) throw new NotFoundException('Tipo de limpeza inválido');
     const cleaner = await this.prisma.cleanerProfile.findUnique({
       where: { userId: cleanerId },
       select: { isActive: true, stripeAccountId: true },
     });
     if (!cleaner?.isActive) {
-      throw new NotFoundException('Cleaner not found or inactive');
+      throw new NotFoundException('Limpador não encontrado ou inativo');
     }
 
-    // 4. Validate cleaner availability
+    // 4. Validar disponibilidade do limpador
     const conflicting = await this.prisma.appointment.findFirst({
       where: {
         cleanerId,
@@ -80,9 +73,9 @@ export class AppointmentService {
         },
       },
     });
-    if (conflicting) throw new ForbiddenException('Cleaner is not available at this time');
+    if (conflicting) throw new ForbiddenException('Limpador não está disponível');
 
-    // 5. Create appointment and update plan usage
+    // 5. Criar agendamento e atualizar uso do plano
     const appointment = await this.prisma.$transaction(async (tx) => {
       const newApp = await tx.appointment.create({
         data: {
@@ -105,42 +98,8 @@ export class AppointmentService {
       return newApp;
     });
 
-    // 6. Process payment if needed
-    let paymentClientSecret = ''; // Initialize without explicit type
-    if (!useFreeSession) {
-      if (!cleaner.stripeAccountId) {
-        throw new ForbiddenException('Cleaner must have a Stripe account');
-      }
-      try {
-        const amountCents = Math.round(Number(cleaningType.price) * 100);
-        const fee = Math.round(amountCents * 0.2);
-        const intent = await this.stripeService.createPaymentIntent(
-          amountCents,
-          'usd',
-          fee,
-          cleaner, // Pass cleaner object
-          cleaner.stripeAccountId, // Pass destinationAccount
-        );
-        // Record payment
-        await this.prisma.payment.create({
-          data: {
-            appointmentId: appointment.id,
-            amount: amountCents / 100,
-            method: PaymentMethod.CARD,
-            transactionId: intent.id,
-            status: PaymentStatus.PENDING,
-            currency: 'usd',
-          },
-        });
-        paymentClientSecret = intent.client_secret ?? ''; // Fallback to empty string
-      } catch (error) {
-        this.logger.error(`Failed to create payment intent: ${error}`);
-        throw new ForbiddenException('Failed to process payment');
-      }
-    }
-
-    // 7. Build and return DTO
-    const response: AppointmentResponseDto = {
+    // 7. Retornar DTO
+    return {
       id: appointment.id,
       dateTime: appointment.dateTime,
       status: appointment.status,
@@ -150,8 +109,6 @@ export class AppointmentService {
       clientId: appointment.clientId,
       cleanerId: appointment.cleanerId,
       addressId: appointment.addressId,
-      paymentClientSecret: useFreeSession ? '' : paymentClientSecret, // Empty string for free sessions
     };
-    return response;
   }
 }

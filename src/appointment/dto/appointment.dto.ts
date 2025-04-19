@@ -96,8 +96,4 @@ export class AppointmentResponseDto {
   @IsUUID()
   addressId: string
 
-  @ApiProperty({ example: 'sk_test_123', required: false })
-  @IsOptional()
-  @IsString()
-  paymentClientSecret?: string;
 }
