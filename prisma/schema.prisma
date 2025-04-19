@@ -171,7 +171,7 @@ model UserPlan {
   planId        String
   startDate     DateTime
   endDate       DateTime
-  active        Boolean  @default(true)
+  isActive      Boolean  @default(true)
   usedCleanings Int      @default(0)
   paymentId     String?
   createdAt     DateTime @default(now())

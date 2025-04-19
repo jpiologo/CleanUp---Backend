@@ -19,10 +19,8 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'User not found if ID provided' })
   findAllOrOne(@Query('id') id?: string) {
     if (id) {
-      
       return this.usersService.findOne(id);
     }
-    
     return this.usersService.findAll();
   }
 
