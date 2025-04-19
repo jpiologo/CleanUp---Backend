@@ -1,11 +1,20 @@
-import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { StripeService } from '../payments/stripe.service';
+import { StripeService } from '../payments/stripe/stripe.service';
 import {
   CreateAppointmentDto,
   AppointmentResponseDto,
 } from './dto/appointment.dto';
-import { AppointmentStatus } from '@prisma/client';
+import {
+  AppointmentStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from '@prisma/client';
 import { startOfWeek, endOfWeek } from 'date-fns';
 
 @Injectable()
@@ -30,57 +39,39 @@ export class AppointmentService {
 
     // 2. Validate user subscription plan and usage
     let useFreeSession = false;
-
     if (dto.planId) {
       const userPlan = await this.prisma.userPlan.findFirst({
         where: { id: dto.planId, userId: clientId, isActive: true },
       });
-      if (!userPlan) {
-        throw new NotFoundException('Invalid subscription plan');
-      }
+      if (!userPlan) throw new NotFoundException('Invalid subscription plan');
 
-      // Check available sessions for the week
       const weekStart = startOfWeek(dto.dateTime, { weekStartsOn: 1 });
       const weekEnd = endOfWeek(dto.dateTime, { weekStartsOn: 1 });
-
       const sessionCount = await this.prisma.appointment.count({
-        where: {
-          planId: dto.planId,
-          clientId,
-          dateTime: { gte: weekStart, lt: weekEnd },
-        },
+        where: { planId: dto.planId, clientId, dateTime: { gte: weekStart, lt: weekEnd } },
       });
-
-      if (sessionCount >= userPlan.sessionsPerWeek) {
-        throw new ForbiddenException('Weekly session limit reached');
+      if (sessionCount >= userPlan.cleaningsPerWeek) {
+        throw new ForbiddenException('You reached your limit for appointments');
       }
-
       useFreeSession = true;
     }
 
     // 3. Validate required entities
     const { addressId, cleanerId, cleaningTypeId, dateTime, notes, planId } = dto;
-
     const address = await this.prisma.address.findUnique({ where: { id: addressId } });
-    if (!address) {
-      throw new NotFoundException(`Address with ID ${addressId} not found`);
-    }
-
+    if (!address) throw new NotFoundException('Address not found');
     const cleaningType = await this.prisma.cleaningType.findUnique({ where: { id: cleaningTypeId } });
-    if (!cleaningType) {
-      throw new NotFoundException('Invalid cleaning type');
-    }
-
+    if (!cleaningType) throw new NotFoundException('Invalid cleaning type');
     const cleaner = await this.prisma.cleanerProfile.findUnique({
       where: { userId: cleanerId },
-      select: { isActive: true, user: { select: { stripeAccountId: true } } },
+      select: { isActive: true, stripeAccountId: true },
     });
-    if (!cleaner || !cleaner.isActive) {
-      throw new NotFoundException(`Cleaner with ID ${cleanerId} not found or inactive`);
+    if (!cleaner?.isActive) {
+      throw new NotFoundException('Cleaner not found or inactive');
     }
 
     // 4. Validate cleaner availability
-    const conflictingAppointment = await this.prisma.appointment.findFirst({
+    const conflicting = await this.prisma.appointment.findFirst({
       where: {
         cleanerId,
         dateTime: {
@@ -89,13 +80,11 @@ export class AppointmentService {
         },
       },
     });
-    if (conflictingAppointment) {
-      throw new ForbiddenException('Cleaner is not available at this time');
-    }
+    if (conflicting) throw new ForbiddenException('Cleaner is not available at this time');
 
-    // 5. Create appointment and update plan usage in a transaction
+    // 5. Create appointment and update plan usage
     const appointment = await this.prisma.$transaction(async (tx) => {
-      const newAppointment = await tx.appointment.create({
+      const newApp = await tx.appointment.create({
         data: {
           clientId,
           cleanerId,
@@ -104,47 +93,53 @@ export class AppointmentService {
           planId: useFreeSession ? planId : null,
           dateTime,
           status: AppointmentStatus.PENDING,
-          duration: cleaningType.duration ?? 60,
           notes,
         },
       });
-
-      if (useFreeSession && userPlan) {
+      if (useFreeSession) {
         await tx.userPlan.update({
-          where: { id: userPlan.id },
-          data: { sessionsUsed: { increment: 1 } },
+          where: { id: planId },
+          data: { usedCleanings: { increment: 1 } },
         });
       }
-
-      return newAppointment;
+      return newApp;
     });
 
-    // 6. Initiate payment if not a free session
-    let paymentClientSecret: string | undefined;
+    // 6. Process payment if needed
+    let paymentClientSecret = ''; // Initialize without explicit type
     if (!useFreeSession) {
-      if (!cleaner.user.stripeAccountId) {
-        throw new ForbiddenException('Cleaner does not have a valid Stripe account');
+      if (!cleaner.stripeAccountId) {
+        throw new ForbiddenException('Cleaner must have a Stripe account');
       }
-
       try {
-        const amountInCents = Math.round(Number(cleaningType.price) * 100);
-        const feeAmount = Math.round(amountInCents * 0.2);
-
-        const paymentIntent = await this.stripeService.client.paymentIntents.create({
-          amount: amountInCents,
-          currency: 'brl',
-          application_fee_amount: feeAmount,
-          transfer_data: { destination: cleaner.user.stripeAccountId },
+        const amountCents = Math.round(Number(cleaningType.price) * 100);
+        const fee = Math.round(amountCents * 0.2);
+        const intent = await this.stripeService.createPaymentIntent(
+          amountCents,
+          'usd',
+          fee,
+          cleaner, // Pass cleaner object
+          cleaner.stripeAccountId, // Pass destinationAccount
+        );
+        // Record payment
+        await this.prisma.payment.create({
+          data: {
+            appointmentId: appointment.id,
+            amount: amountCents / 100,
+            method: PaymentMethod.CARD,
+            transactionId: intent.id,
+            status: PaymentStatus.PENDING,
+            currency: 'usd',
+          },
         });
-
-        paymentClientSecret = paymentIntent.client_secret;
+        paymentClientSecret = intent.client_secret ?? ''; // Fallback to empty string
       } catch (error) {
-        this.logger.error(`Failed to create payment intent: ${error.message}`);
+        this.logger.error(`Failed to create payment intent: ${error}`);
         throw new ForbiddenException('Failed to process payment');
       }
     }
 
-    // 7. Build response DTO
+    // 7. Build and return DTO
     const response: AppointmentResponseDto = {
       id: appointment.id,
       dateTime: appointment.dateTime,
@@ -155,9 +150,8 @@ export class AppointmentService {
       clientId: appointment.clientId,
       cleanerId: appointment.cleanerId,
       addressId: appointment.addressId,
-      paymentClientSecret,
+      paymentClientSecret: useFreeSession ? '' : paymentClientSecret, // Empty string for free sessions
     };
-
     return response;
   }
 }

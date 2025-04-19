@@ -34,9 +34,7 @@ enum PaymentStatus {
 }
 
 enum PaymentMethod {
-  CREDIT_CARD
-  PIX
-  BANK_TRANSFER
+  CARD
 }
 
 enum NotificationType {
@@ -127,11 +125,12 @@ model Appointment {
 }
 
 model CleanerProfile {
-  id           String  @id @default(uuid())
-  bio          String?
-  rating       Float   @default(0)
-  reviewsCount Int     @default(0)
-  isActive     Boolean @default(true)
+  id              String  @id @default(uuid())
+  bio             String?
+  rating          Float   @default(0)
+  reviewsCount    Int     @default(0)
+  isActive        Boolean @default(true)
+  stripeAccountId String?
 
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
@@ -166,16 +165,17 @@ model Plan {
 }
 
 model UserPlan {
-  id            String   @id @default(uuid())
-  userId        String
-  planId        String
-  startDate     DateTime
-  endDate       DateTime
-  isActive      Boolean  @default(true)
-  usedCleanings Int      @default(0)
-  paymentId     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id               String   @id @default(uuid())
+  userId           String
+  planId           String
+  startDate        DateTime
+  endDate          DateTime
+  isActive         Boolean  @default(true)
+  usedCleanings    Int      @default(0)
+  paymentId        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  cleaningsPerWeek Int
 
   user User @relation(fields: [userId], references: [id])
   plan Plan @relation(fields: [planId], references: [id])

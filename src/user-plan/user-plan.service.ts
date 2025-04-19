@@ -11,13 +11,13 @@ export class UserPlanService {
     const now = new Date();
     await this.prisma.userPlan.updateMany({
       where: {
-        active: true,
+        isActive: true,
         endDate: {
           lt: now,
         },
       },
       data: {
-        active: false,
+        isActive: false,
       },
     });
   }
@@ -26,7 +26,7 @@ export class UserPlanService {
     return this.prisma.userPlan.findFirst({
       where: {
         userId,
-        active: true,
+        isActive: true,
         endDate: {
           gte: new Date(),
         },
@@ -43,7 +43,7 @@ export class UserPlanService {
     const existing = await this.prisma.userPlan.findFirst({
       where: {
         userId: dto.userId,
-        active: true,
+        isActive: true,
         endDate: { gte: new Date() },
       },
     });
@@ -51,15 +51,22 @@ export class UserPlanService {
     if (existing) {
       await this.prisma.userPlan.update({
         where: { id: existing.id },
-        data: { active: false },
+        data: { isActive: false },
       });
+    }
+
+    const plan = await this.prisma.plan.findUnique({
+      where: { id: dto.planId },
+    });
+    if (!plan) {
+      throw new Error('Subscription plan not found');
     }
 
     return this.prisma.userPlan.create({
       data: {
         ...dto,
-        active: true,
         usedCleanings: 0,
+        cleaningsPerWeek: plan.cleaningsPerWeek,
       },
     });
   }
@@ -73,7 +80,7 @@ export class UserPlanService {
       where: { id: dto.id },
       data: {
         ...dto,
-        active: !isExpired,
+        isActive: !isExpired,
       },
     });
   }

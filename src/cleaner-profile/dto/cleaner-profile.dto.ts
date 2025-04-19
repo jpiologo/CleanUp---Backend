@@ -10,6 +10,10 @@ export class CreateCleanerProfileDto {
   @IsOptional()
   @IsString()
   bio?: string;
+
+  @ApiProperty({ description: 'Cleaner Stripe account ID' })
+  @IsUUID()
+  stripeAccountId?: string;
 }
 
 export class UpdateCleanerProfileDto extends PartialType(CreateCleanerProfileDto) {}

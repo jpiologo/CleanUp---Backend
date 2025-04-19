@@ -13,7 +13,7 @@ export class CleanerProfileService {
     }
 
     if (!user.isActive) {
-      throw new ForbiddenException('User is not active, cannot create a profile');
+      throw new ForbiddenException('User not found or inactive');
     }
 
     const existing = await this.prisma.cleanerProfile.findUnique({ where: { userId } });
@@ -25,6 +25,7 @@ export class CleanerProfileService {
       data: {
         userId,
         bio: dto.bio,
+        stripeAccountId: dto.stripeAccountId,
       },
     });
   }
