@@ -15,6 +15,8 @@ import { AppointmentService } from './appointment.service'
 import { AppointmentResponseDto, CreateAppointmentDto } from './dto/appointment.dto'
 import { AuthGuard } from '@nestjs/passport'
 import { CurrentUser } from 'src/common/decorators/current-user.decorator'
+import { UserRole } from '@prisma/client'
+import { Roles } from 'src/common/decorators/roles.decorator'
   
 @ApiTags('Appointments')
 @ApiBearerAuth()
@@ -23,6 +25,7 @@ import { CurrentUser } from 'src/common/decorators/current-user.decorator'
 export class AppointmentController {
   constructor(private readonly service: AppointmentService) {}
   
+  @Roles(UserRole.CLIENT, UserRole.CLEANER, UserRole.ADMIN)
   @Post()
   @ApiOperation({
     summary: 'Create a new appointment',
