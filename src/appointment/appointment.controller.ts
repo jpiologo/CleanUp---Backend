@@ -12,7 +12,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger'
 import { AppointmentService } from './appointment.service'
-import { AppointmentResponseDto, CreateAppointmentDto } from './dto/appointment.dto'
+import { CreateAppointmentDto } from './dto/appointment.dto'
 import { AuthGuard } from '@nestjs/passport'
 import { CurrentUser } from 'src/common/decorators/current-user.decorator'
 import { UserRole } from '@prisma/client'
@@ -39,7 +39,6 @@ export class AppointmentController {
   @ApiResponse({
     status: 201,
     description: 'Appointment successfully created.',
-    type: AppointmentResponseDto, 
     example: {
       id: '123e4567-e89b-12d3-a456-426614174000',
       userId: '456e7890-e89b-12d3-a456-426614174001',
@@ -49,35 +48,8 @@ export class AppointmentController {
       createdAt: '2025-01-10T12:00:00.000Z',
     },
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid input data.',
-    example: {
-      statusCode: 400,
-      message: 'Invalid date format or required fields missing.',
-      error: 'Bad Request',
-    },
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized. Missing or invalid JWT token.',
-    example: {
-      statusCode: 401,
-      message: 'Unauthorized',
-    },
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Conflict. The requested time slot is already booked.',
-    example: {
-      statusCode: 409,
-      message: 'The selected time slot is unavailable.',
-      error: 'Conflict',
-    },
-  })
-  async create(@CurrentUser() user: { id: string }, @Body() dto: CreateAppointmentDto,): Promise<AppointmentResponseDto> {
+  async create(@CurrentUser() user: { id: string }, @Body() dto: CreateAppointmentDto,) {
     return this.service.create(dto, user.id);
   }
-  
 }
   

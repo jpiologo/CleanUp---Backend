@@ -2,28 +2,25 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
-  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateAppointmentDto,AppointmentResponseDto } from './dto/appointment.dto';
+import { CreateAppointmentDto } from './dto/appointment.dto';
 import {AppointmentStatus} from '@prisma/client';
 import { startOfWeek, endOfWeek } from 'date-fns';
 
 @Injectable()
 export class AppointmentService {
-  private readonly logger = new Logger(AppointmentService.name);
 
   constructor(private prisma: PrismaService) {}
 
   async create(
     dto: CreateAppointmentDto,
     clientId: string,
-  ): Promise<AppointmentResponseDto> {
-    this.logger.log(`Criando agendamento para cliente ${clientId}`);
+  ) {
 
     // 1. Validar se a data é futura
     if (dto.dateTime < new Date()) {
-      throw new ForbiddenException('Não é possível agendar no passado');
+      throw new ForbiddenException('Time travel not permited');
     }
 
     // 2. Validar plano de assinatura e uso
