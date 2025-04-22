@@ -20,7 +20,7 @@ export class AppointmentService {
 
     // 1. Validar se a data é futura
     if (dto.dateTime < new Date()) {
-      throw new ForbiddenException('Time travel not permited');
+      throw new ForbiddenException('Time travel not allowed');
     }
 
     // 2. Validar plano de assinatura e uso
@@ -29,7 +29,7 @@ export class AppointmentService {
       const userPlan = await this.prisma.userPlan.findFirst({
         where: { id: dto.planId, userId: clientId, isActive: true },
       });
-      if (!userPlan) throw new NotFoundException('Plano de assinatura inválido');
+      if (!userPlan) throw new NotFoundException('Signature plan not found');
 
       const weekStart = startOfWeek(dto.dateTime, { weekStartsOn: 1 });
       const weekEnd = endOfWeek(dto.dateTime, { weekStartsOn: 1 });
@@ -41,7 +41,7 @@ export class AppointmentService {
         },
       });
       if (sessionCount >= userPlan.cleaningsPerWeek) {
-        throw new ForbiddenException('Limite de agendamentos atingido');
+        throw new ForbiddenException('Appointment limit reached');
       }
       useFreeSession = true;
     }
@@ -49,16 +49,14 @@ export class AppointmentService {
     // 3. Validar entidades necessárias
     const { addressId, cleanerId, cleaningTypeId, dateTime, notes, planId } = dto;
     const address = await this.prisma.address.findUnique({ where: { id: addressId } });
-    if (!address) throw new NotFoundException('Endereço não encontrado');
+    if (!address) throw new NotFoundException('Address not found');
     const cleaningType = await this.prisma.cleaningType.findUnique({ where: { id: cleaningTypeId } });
-    if (!cleaningType) throw new NotFoundException('Tipo de limpeza inválido');
+    if (!cleaningType) throw new NotFoundException('Invalid Cleaning Type');
     const cleaner = await this.prisma.cleanerProfile.findUnique({
       where: { userId: cleanerId },
       select: { isActive: true, stripeAccountId: true },
     });
-    if (!cleaner?.isActive) {
-      throw new NotFoundException('Limpador não encontrado ou inativo');
-    }
+    if (!cleaner || !cleaner.isActive) throw new NotFoundException('Cleaner not found or inactive');
 
     // 4. Validar disponibilidade do limpador
     const conflicting = await this.prisma.appointment.findFirst({
@@ -70,7 +68,7 @@ export class AppointmentService {
         },
       },
     });
-    if (conflicting) throw new ForbiddenException('Limpador não está disponível');
+    if (conflicting) throw new ForbiddenException('Cleaner not avaiable at this date and time');
 
     // 5. Criar agendamento e atualizar uso do plano
     const appointment = await this.prisma.$transaction(async (tx) => {
@@ -95,17 +93,6 @@ export class AppointmentService {
       return newApp;
     });
 
-    // 7. Retornar DTO
-    return {
-      id: appointment.id,
-      dateTime: appointment.dateTime,
-      status: appointment.status,
-      notes: appointment.notes ?? '',
-      cleaningTypeId: appointment.cleaningTypeId,
-      planId: appointment.planId ?? undefined,
-      clientId: appointment.clientId,
-      cleanerId: appointment.cleanerId,
-      addressId: appointment.addressId,
-    };
+    return appointment
   }
 }
