@@ -47,8 +47,8 @@ export class UserPlanController {
   @Post()
   @ApiOperation({ summary: 'Create a user plan after successful payment' })
   @ApiResponse({ status: 201, description: 'User plan created successfully' })
-  create(@Body() dto: CreateUserPlanDto) {
-    return this.service.create(dto);
+  create(@CurrentUser() user: { id: string }, @Body() dto: CreateUserPlanDto) {
+    return this.service.create(dto, user.id);
   }
 
   @Patch()

@@ -17,6 +17,7 @@ import { CleaningTypeModule } from './cleaning-type/cleaning-type.module';
 import { UserPlanModule } from './user-plan/user-plan.module';
 import { CleanerProfileModule } from './cleaner-profile/cleaner-profile.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { ReviewModule } from './review/review.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     UserPlanModule,
     CleanerProfileModule,
     NotificationsModule,
+    ReviewModule,
   ],
   controllers: [AppController],
   providers: [

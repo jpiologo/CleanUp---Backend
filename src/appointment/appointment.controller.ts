@@ -48,8 +48,8 @@ export class AppointmentController {
       createdAt: '2025-01-10T12:00:00.000Z',
     },
   })
-  async create(@CurrentUser() user: { id: string }, @Body() dto: CreateAppointmentDto,) {
-    return this.service.create(dto, user.id);
+  async create(@CurrentUser() clientId: { id: string }, @Body() dto: CreateAppointmentDto,) {
+    return this.service.create(dto, clientId.id);
   }
 }
   
