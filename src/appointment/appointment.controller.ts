@@ -11,7 +11,7 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger'
-import { AppointmentService } from './appointment.service'
+import { AppointmentsService } from './appointment.service'
 import { CreateAppointmentDto } from './dto/appointment.dto'
 import { AuthGuard } from '@nestjs/passport'
 import { CurrentUser } from 'src/common/decorators/current-user.decorator'
@@ -23,7 +23,7 @@ import { Roles } from 'src/common/decorators/roles.decorator'
 @UseGuards(AuthGuard('jwt'))
 @Controller('appointments')
 export class AppointmentController {
-  constructor(private readonly service: AppointmentService) {}
+  constructor(private readonly service: AppointmentsService) {}
   
   @Roles(UserRole.CLIENT, UserRole.CLEANER, UserRole.ADMIN)
   @Post()
