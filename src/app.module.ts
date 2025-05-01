@@ -13,17 +13,23 @@ import { AppointmentModule } from './appointment/appointment.module'
 import { AddressModule } from './address/address.module'
 
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
-import { CleaningTypeModule } from './cleaning-type/cleaning-type.module';
-import { UserPlanModule } from './user-plan/user-plan.module';
-import { CleanerProfileModule } from './cleaner-profile/cleaner-profile.module';
-import { NotificationsModule } from './notifications/notifications.module';
-import { ReviewModule } from './review/review.module';
+import { CleaningTypeModule } from './cleaning-type/cleaning-type.module'
+import { UserPlanModule } from './user-plan/user-plan.module'
+import { CleanerProfileModule } from './cleaner-profile/cleaner-profile.module'
+import { NotificationsModule } from './notifications/notifications.module'
+import { ReviewModule } from './review/review.module'
+import { StripeModule } from './stripe/stripe.module'
+import { validate } from 'class-validator'
 
 @Module({
   imports: [
     PrismaModule,
     UsersModule,
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+      validationSchema: validate,
+    }),
     PlanModule,
     AuthModule,
     AppointmentModule,
@@ -33,6 +39,7 @@ import { ReviewModule } from './review/review.module';
     CleanerProfileModule,
     NotificationsModule,
     ReviewModule,
+    StripeModule,
   ],
   controllers: [AppController],
   providers: [

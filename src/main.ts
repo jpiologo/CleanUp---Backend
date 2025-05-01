@@ -3,9 +3,13 @@ import { AppModule } from './app.module'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { ValidationPipe } from '@nestjs/common'
 import { SwaggerTheme, SwaggerThemeNameEnum } from 'swagger-themes'
+import { raw } from 'express'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
+
+  // Middleware para preservar o raw body para webhooks do Stripe
+  app.use('/stripe/webhook', raw({ type: 'application/json' }))
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -28,11 +32,11 @@ async function bootstrap() {
     })
     .build()
   const document = SwaggerModule.createDocument(app, config)
-  const theme = new SwaggerTheme();
+  const theme = new SwaggerTheme()
   const options = {
     explorer: true,
     customCss: theme.getBuffer(SwaggerThemeNameEnum.DARK),
-  };
+  }
   SwaggerModule.setup('api-docs', app, document, options)
 
   await app.listen(process.env.PORT ?? 3000)

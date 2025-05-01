@@ -34,7 +34,7 @@ enum PaymentStatus {
 }
 
 enum PaymentMethod {
-  CARD
+  CREDIT_CARD
 }
 
 enum NotificationType {
@@ -188,9 +188,9 @@ model Payment {
   appointmentId String
   amount        Decimal       @db.Decimal(10, 2)
   method        PaymentMethod
-  transactionId String?
+  transactionId String?       @unique
   status        PaymentStatus
-  currency      String        @default("BRL")
+  currency      String        @default("USD")
   createdAt     DateTime      @default(now())
 
   appointment Appointment @relation(fields: [appointmentId], references: [id])
