@@ -105,19 +105,20 @@ model Appointment {
   status         AppointmentStatus
   notes          String?           @db.Text
   cleaningTypeId String
-  planId         String?
+  userPlanId     String?
   clientId       String
   cleanerId      String
   addressId      String
 
   cleaningType CleaningType   @relation(fields: [cleaningTypeId], references: [id])
-  plan         Plan?          @relation(fields: [planId], references: [id])
+  userPlan     UserPlan?      @relation(fields: [userPlanId], references: [id])
   client       User           @relation("ClientAppointments", fields: [clientId], references: [id])
   cleaner      CleanerProfile @relation(fields: [cleanerId], references: [id])
   address      Address        @relation(fields: [addressId], references: [id])
 
   Payment Payment[]
   Review  Review[]
+  Plan    Plan[]
 
   @@index([dateTime])
   @@index([clientId, status])
@@ -177,8 +178,9 @@ model UserPlan {
   updatedAt        DateTime @updatedAt
   cleaningsPerWeek Int
 
-  user User @relation(fields: [userId], references: [id])
-  plan Plan @relation(fields: [planId], references: [id])
+  user        User          @relation(fields: [userId], references: [id])
+  plan        Plan          @relation(fields: [planId], references: [id])
+  Appointment Appointment[]
 
   @@index([userId])
 }
