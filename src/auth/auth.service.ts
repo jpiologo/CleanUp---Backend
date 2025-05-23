@@ -1,13 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable, UnauthorizedException } from '@nestjs/common'
-// biome-ignore lint/style/useImportType: <explanation>
 import { JwtService } from '@nestjs/jwt'
-// biome-ignore lint/style/useImportType: <explanation>
 import { PrismaService } from '../../prisma/prisma.service'
 import * as bcrypt from 'bcrypt'
-// biome-ignore lint/style/useImportType: <explanation>
 import { LoginDto } from './dto/login.dto'
-// biome-ignore lint/style/useImportType: <explanation>
 import { JwtPayload } from './jwt.strategy'
 
 @Injectable()
