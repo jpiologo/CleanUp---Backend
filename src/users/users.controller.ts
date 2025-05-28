@@ -25,7 +25,7 @@ export class UsersController {
   }
 
   @Public()
-  @Post()
+  @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User successfully created' })
   @ApiResponse({ status: 409, description: 'User already exists' })
